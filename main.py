@@ -1,9 +1,16 @@
 import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from _token import token
-import datetime
+from datetime import datetime
 import random
+import logging
+import logging.config
+from logs.log_config import log_config
 
+
+logging.config.dictConfig(log_config)
+reply_log = logging.getLogger('reply')
+main_log = logging.getLogger('main')
 
 group = 187318939
 
@@ -17,11 +24,14 @@ class Bot:
         self.long_poll = VkBotLongPoll(vk=self.vk_api, group_id=self.group_id)
 
         self.api = self.vk_api.get_api()
+        main_log.info(f'Bot was init group_id={group_id}')
 
     def run(self):
+        main_log.info('Bot was started')
         for event in self.long_poll.listen():
             # Запись лога любого события
-            self.log(event)
+            main_log.info(f"'New event {event.type}'")
+            main_log.debug(f"{event}")
             # Обаботка события
             self.on_event(event)
 
@@ -29,27 +39,19 @@ class Bot:
         # Новое сообщение
         if event.type == VkBotEventType.MESSAGE_NEW:
             # Доп. действия/информация по необходимости
-            print('  От: ', event.obj.message['from_id'])
-            print('  Текст:', event.obj.message['text'])
+            main_log.debug(f"'new mesg from:{event.obj.message['from_id']} text: {event.obj.message['text']}'")
             self.return_message(obj=event.obj)
 
     # Функция ответа на сообщение
     def return_message(self, obj):
-        self.api.messages.send(message=f"Hi, {obj.message['from_id']}",
-                               random_id=random.randint(0, 2**20),
-                               peer_id=obj.message['peer_id'])
-
-    @staticmethod
-    def log(event):
-        print(datetime.datetime.now(), event.type)
-
-
-def staticmetod():
-    def log(event):
-        print(datetime.datetime.now(), event.type)
-    
-
-
+        message = f"Hi, {obj.message['from_id']}"
+        random_id = random.randint(0, 2 ** 20)
+        peer_id = obj.message['peer_id']
+        reply_log.info(f"'Bot reply to user_id:{obj.message['from_id']}'")
+        reply_log.debug(f"'mesg: {message}, rand_id: {random_id}, peer_id: {peer_id}'")
+        self.api.messages.send(message=message,
+                               random_id=random_id,
+                               peer_id=peer_id)
 
 
 if __name__ == '__main__':
