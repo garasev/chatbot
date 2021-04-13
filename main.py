@@ -24,7 +24,7 @@ class Bot:
         self.long_poll = VkBotLongPoll(vk=self.vk_api, group_id=self.group_id)
 
         self.api = self.vk_api.get_api()
-        main_log.info(f'Bot was init group_id={group_id}')
+        main_log.info(f"Bot was init with group_id={self.group_id}")
 
     def run(self):
         main_log.info('Bot was started')
@@ -52,6 +52,9 @@ class Bot:
         self.api.messages.send(message=message,
                                random_id=random_id,
                                peer_id=peer_id)
+
+    def __del__(self):
+        main_log.info(f"Bot was exit with group_id={self.group_id}")
 
 
 if __name__ == '__main__':
